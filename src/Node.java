@@ -10,6 +10,7 @@
  * http://enos.itcollege.ee/~jpoial/algoritmid/puud.html
  * https://stackoverflow.com/questions/4662215/how-to-extract-a-substring-using-regex
  */
+import com.sun.istack.internal.Nullable;
 import com.sun.org.apache.xpath.internal.operations.Bool;
 
 import java.util.*;
@@ -27,7 +28,7 @@ public class Node {
       setNextSibling(r);
    }
 
-   public String getName() {
+   private String getName() {
       return name;
    }
 
@@ -35,7 +36,7 @@ public class Node {
       this.name = name;
    }
 
-   public Node getFirstChild() {
+   private Node getFirstChild() {
       return firstChild;
    }
 
@@ -43,7 +44,7 @@ public class Node {
       this.firstChild = firstChild;
    }
 
-   public Node getNextSibling() {
+   private Node getNextSibling() {
       return nextSibling;
    }
 
@@ -58,7 +59,6 @@ public class Node {
       StringBuilder currentBuffer = new StringBuilder();
       StringBuilder siblingBuffer = new StringBuilder();
       StringBuilder childBuffer = new StringBuilder();
-      ArrayList<String> siblings = new ArrayList<>();
       Boolean hasChild = false;
       int parenthesisPairCount = 0;
       for (int i = 0; i < charArray.length; i++) {
@@ -86,19 +86,27 @@ public class Node {
             currentBuffer.append(charArray[i]);
          }
       }
-      String currentNode = currentBuffer.toString();
-      String childNode = childBuffer.toString();
-      String siblingNode = siblingBuffer.toString();
+      String currentNodeString = currentBuffer.toString();
+      String childNodeString = childBuffer.toString();
+      String siblingNodeString = siblingBuffer.toString();
 
-      return new Node( currentNode, parsePostfix(childNode), parsePostfix(siblingNode));  // TODO!!! return the root
-   }
-
-   private void createNode(String s){
-
+      return new Node(currentNodeString, parsePostfix(childNodeString), parsePostfix(siblingNodeString));  // TODO!!! return the root
    }
 
    public String leftParentheticRepresentation() {
-      return ""; // TODO!!! return the string without spaces
+      StringBuilder tree = new StringBuilder();
+      if (!this.name.isEmpty()){
+         tree.append(this.getName());
+         if (this.getFirstChild() != null){
+            String child = this.getFirstChild().leftParentheticRepresentation();
+            tree.append("(").append(child).append(")");
+         }
+         if (this.getNextSibling() != null){
+            String sibling = this.getNextSibling().leftParentheticRepresentation();
+            tree.append(",").append(sibling);
+         }
+      }
+      return tree.toString(); // TODO!!! return the string without spaces
    }
 
    public static void main (String[] param) {
@@ -109,4 +117,3 @@ public class Node {
    }
 
 }
-
