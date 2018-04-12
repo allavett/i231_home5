@@ -10,17 +10,12 @@
  * http://enos.itcollege.ee/~jpoial/algoritmid/puud.html
  * https://stackoverflow.com/questions/4662215/how-to-extract-a-substring-using-regex
  */
-import com.sun.istack.internal.Nullable;
-import com.sun.org.apache.xpath.internal.operations.Bool;
-
-import java.util.*;
 
 public class Node {
 
    private String name;
    private Node firstChild;
    private Node nextSibling;
-
 
    Node (String n, Node d, Node r) {
       setName(n);
@@ -54,6 +49,22 @@ public class Node {
 
    //Recursive method that splits string and creates nodes
    public static Node parsePostfix (String s) {
+      if (s.matches(".*\\(\\)+.*")) throw new RuntimeException("Bad string \"" + s + "\" contains empty child!");
+      if (s.matches(".*(,,)+.*")) throw new RuntimeException("Bad string \"" + s + "\" contains multiple consecutive commas!");
+      if (s.matches(".*(\\s)+.*")) throw new RuntimeException("String \"" + s + "\" contains whitespace!");
+      if (s.matches(".*(\\(,)+.*|.*(,\\))+.*")) throw new RuntimeException("String \"" + s + "\" is not valid!");
+      if (s.matches("\\)+.*|.*\\(+")) throw new RuntimeException("String \"" + s + "\" contains wrong bracket!");
+      if (s.matches(".*\\(\\(.*\\)\\).*")) throw new RuntimeException("String \"" + s + "\" contains double brackets!");
+      if (s.matches("\\(+.*\\)")) throw new RuntimeException("String \"" + s + "\" does not contain root node!");
+      Node tree = parseTree(s);
+      isRootNode = true;
+      return tree;
+   }
+
+   //Makes it possible to recognize tree root
+   private static Boolean isRootNode = true;
+
+   private static Node parseTree(String s){
       if (s.isEmpty()) return null;
       char[] charArray = s.toCharArray();
       StringBuilder currentBuffer = new StringBuilder();
@@ -78,19 +89,21 @@ public class Node {
             }
          }else{
             if (String.valueOf(charArray[i]).equals(",")){
+               if (isRootNode) throw new RuntimeException("Invalid tree structure \"" + s + "\", root can't have siblings!");
                for (int j = i+1; j < charArray.length; j++) {
                   siblingBuffer.append(charArray[j]);
                }
-               break; // break out from loop (finish)
+               break; // break out from loop (finish with current node)
             }
             currentBuffer.append(charArray[i]);
          }
       }
+      isRootNode = false;
       String currentNodeString = currentBuffer.toString();
       String childNodeString = childBuffer.toString();
       String siblingNodeString = siblingBuffer.toString();
 
-      return new Node(currentNodeString, parsePostfix(childNodeString), parsePostfix(siblingNodeString));  // TODO!!! return the root
+      return new Node(currentNodeString, parseTree(childNodeString), parseTree(siblingNodeString));
    }
 
    public String leftParentheticRepresentation() {
@@ -106,11 +119,12 @@ public class Node {
             tree.append(",").append(sibling);
          }
       }
-      return tree.toString(); // TODO!!! return the string without spaces
+      return tree.toString();
    }
 
    public static void main (String[] param) {
-      String s = "A(B,(B2)C),B3(A2,C2)";
+
+      String s = "(B,((B2))C)A,(B4,C3)B3";
       Node t = Node.parsePostfix (s);
       String v = t.leftParentheticRepresentation();
       System.out.println (s + " ==> " + v); // (B1,C)A ==> A(B1,C)
